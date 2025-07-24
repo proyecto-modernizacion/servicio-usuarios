@@ -1,55 +1,34 @@
 ﻿using Usuarios.Dominio.Entidades;
 using Usuarios.Dominio.Puertos.Repositorios;
-using Usuarios.Infraestructura.Adaptadores.RepositorioGenerico;
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 
 namespace Usuarios.Infraestructura.Adaptadores.Repositorios
 {
     [ExcludeFromCodeCoverage]
     public class UsuarioRepositorio : IUsuarioRepositorio
     {
-        private readonly IRepositorioBase<Usuario> _repositorioUsuario;
-        private readonly IRepositorioBase<Perfil> _repositorioPerfil;
+        private readonly IServiceProvider _serviceProvider;
 
-        public UsuarioRepositorio(IRepositorioBase<Usuario> repositorioUsuario, IRepositorioBase<Perfil> repositorioPerfil)
+        public UsuarioRepositorio(IServiceProvider serviceProvider)
         {
-            _repositorioUsuario = repositorioUsuario;
-            _repositorioPerfil = repositorioPerfil;
+            _serviceProvider = serviceProvider;
         }
 
-        public Task<Usuario> Actualizar(Usuario usuario)
+        private UsuariosDbContext GetContext()
         {
-            throw new NotImplementedException();
-        }
-
-        public async Task<Usuario> Crear(Usuario usuario)
-        {
-            return await _repositorioUsuario.Guardar(usuario);
-        }
-
-        public Task<Usuario> Eliminar(Guid id)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<Usuario> ObtenerPorId(Guid id)
-        {
-            return await _repositorioUsuario.BuscarPorLlave(id);
+            return _serviceProvider.GetService<UsuariosDbContext>();
         }
 
         public async Task<Usuario> ObtenerPorUsername(string username)
         {
-            return await _repositorioUsuario.BuscarPorCampos(x => x.Username == username);
+            var ctx = GetContext();
+            var usuario = await ctx.Usuarios.FromSqlRaw("SELECT Usr_codigo, Clave FROM fun_buscarusuario({0})", username).FirstOrDefaultAsync();
+            await ctx.DisposeAsync();
+            return usuario;
         }
 
-        public async Task<List<Usuario>> ObtenerTodos()
-        {
-            return await _repositorioUsuario.DarListado();
-        }
-
-        public async Task<Perfil> ObtenerUsuarioPorPerfil(Guid idUsuario)
-        {
-            return await _repositorioPerfil.BuscarPorCampos(x => x.Id == idUsuario);
-        }
+        
     }
 }

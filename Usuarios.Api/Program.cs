@@ -64,10 +64,7 @@ builder.Services.AddDbContext<UsuariosDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("UsuariosDbContext")), ServiceLifetime.Transient);
 builder.Services.AddTransient(typeof(IRepositorioBase<>), typeof(RepositorioBase<>));
 builder.Services.AddTransient<IUsuarioRepositorio, UsuarioRepositorio>();
-builder.Services.AddTransient<IRolRepositorio, RolRepositorio>();
 //Capa Dominio - Servicios
-builder.Services.AddTransient<CrearUsuario>();
-builder.Services.AddTransient<ConsultarRolUsuario>();
 builder.Services.AddTransient<ConsultarUsuario>();
 
 var app = builder.Build();

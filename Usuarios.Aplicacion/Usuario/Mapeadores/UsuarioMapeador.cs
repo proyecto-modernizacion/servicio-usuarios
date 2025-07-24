@@ -1,8 +1,6 @@
 ﻿
 using AutoMapper;
-using Usuarios.Aplicacion.Usuario.Comandos;
 using Usuarios.Aplicacion.Usuario.Dto;
-using Usuarios.Dominio.Entidades;
 
 namespace Usuarios.Aplicacion.Usuario.Mapeadores
 {
@@ -11,15 +9,15 @@ namespace Usuarios.Aplicacion.Usuario.Mapeadores
         public UsuarioMapeador() 
         {
 
-            CreateMap<Dominio.Entidades.Usuario, UsuarioDto>().ReverseMap();
-            CreateMap<UsuarioDto, UsuarioCreadoOut>()
-                .ForMember(dest => dest.IdUsuario, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.IdRol, opt => opt.MapFrom(src => src.IdRol));
-            CreateMap<UsuarioCrearComando, Dominio.Entidades.Usuario>().ReverseMap(); 
-            
-            CreateMap<Dominio.Entidades.Usuario, UsuarioOut>().ReverseMap();
+            CreateMap<Dominio.Entidades.Usuario, UsuarioDto>()
+                .ForMember(dest => dest.Username, opt => opt.MapFrom(src => src.Usr_codigo))
+                .ForMember(dest => dest.Contrasena, opt => opt.MapFrom(src => src.Clave));
 
-            CreateMap<Perfil, UsuarioOut>().ReverseMap();
+            CreateMap<Dominio.Entidades.Usuario, UsuarioOut>()
+                .ForMember(dest => dest.Username, opt => opt.MapFrom(src => src.Usr_codigo))
+                .ForMember(dest => dest.Contrasena, opt => opt.MapFrom(src => src.Clave));
+
+
         }
     }
 }

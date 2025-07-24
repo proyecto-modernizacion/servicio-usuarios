@@ -33,9 +33,9 @@ namespace Usuarios.Api.Middleware
             if (token != null)
             {
                 var tokenInfo = ValidarToken(token);
-                if (!string.IsNullOrEmpty(tokenInfo.IdUsuario)) 
+                if (!string.IsNullOrEmpty(tokenInfo.Username)) 
                 {
-                    httpContext.Items["UserId"] = tokenInfo.IdUsuario;
+                    httpContext.Items["UserId"] = tokenInfo.Username;
                 }
             }
 
@@ -61,7 +61,7 @@ namespace Usuarios.Api.Middleware
                 }, out SecurityToken securityToken);
 
                 var jwtToken = (JwtSecurityToken)securityToken;
-                output.IdUsuario = jwtToken.Claims.First(t => t.Type == "unique_name").Value;
+                output.Username = jwtToken.Claims.First(t => t.Type == "unique_name").Value;
                 
                 return output;
             }

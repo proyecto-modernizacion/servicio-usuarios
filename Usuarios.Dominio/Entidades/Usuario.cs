@@ -1,9 +1,10 @@
 ﻿
 namespace Usuarios.Dominio.Entidades
 {
-    public class Usuario : EntidadBaseGuid
+    public class Usuario 
     {
-        public string Contrasena { get; set; }
+        public string Usr_codigo { get; set; }
+        public string Clave { get; set; }
 
     }
 }

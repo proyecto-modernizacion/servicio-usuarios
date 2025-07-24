@@ -7,7 +7,6 @@ using System.Net;
 using System.Security.Claims;
 using Usuarios.Aplicacion.Comun;
 using Usuarios.Aplicacion.Usuario.Dto;
-using Usuarios.Aplicacion.Usuario.Herramientas;
 using Usuarios.Dominio.Servicios.Usuarios;
 
 namespace Usuarios.Aplicacion.Usuario.Comandos
@@ -15,23 +14,18 @@ namespace Usuarios.Aplicacion.Usuario.Comandos
     public class UsuarioLoginManejador : IRequestHandler<UsuarioLoginComando, LoginOut>
     {
         private readonly ConsultarUsuario _consultarUsuario;
-        private readonly ConsultarRolUsuario _consultarRol;
         private readonly string _llave;
         private readonly string _receptor;
         private readonly string _emisor;
         private readonly int _tiempoWeb;
-        private readonly int _tiempoMovil;
 
-        public UsuarioLoginManejador(IConfiguration configuracion, ConsultarUsuario consultarUsuario, ConsultarRolUsuario consultarRol) 
+        public UsuarioLoginManejador(IConfiguration configuracion, ConsultarUsuario consultarUsuario) 
         {
             _consultarUsuario = consultarUsuario;
-            _consultarRol = consultarRol;
             _llave = configuracion["TokenJwt:Llave"];
             _receptor = configuracion["TokenJwt:Receptor"];
             _emisor = configuracion["TokenJwt:Emisor"];
             _tiempoWeb = int.Parse(configuracion["TokenJwt:TiempoWeb"]);
-            _tiempoMovil = int.Parse(configuracion["TokenJwt:TiempoMovil"]);
-
         }
         public async Task<LoginOut> Handle(UsuarioLoginComando request, CancellationToken cancellationToken)
         {
@@ -49,24 +43,11 @@ namespace Usuarios.Aplicacion.Usuario.Comandos
                 }
                 else 
                 { 
-                    var claveCifrada = Utilidades.Cifrar(request.Contrasena);
 
-                    if (claveCifrada == usuario.Contrasena)
+                    if (request.Contrasena == usuario.Clave)
                     {
-                        var rol = await _consultarRol.Ejecutar(usuario.IdRol);
-                        output.Menu = rol.Menu;
-                        output.Idusuario = usuario.Id;
-
-                        int tiempo = 0;
-                        if (request.Aplicacion == AplicacionEnumerador.MOVIL)
-                        {
-                            tiempo = _tiempoMovil;
-                        }
-                        else 
-                        {
-                            tiempo = _tiempoWeb;
-                        }
-                        output.Token = GenerarTokenJwt(usuario.Id, tiempo);
+                        output.Token = GenerarTokenJwt(usuario.Usr_codigo, _tiempoWeb);
+                        output.Username = usuario.Usr_codigo;
                         output.Mensaje = "Operación exitosa";
                         output.Resultado = Resultado.Exitoso;
                         output.Status = HttpStatusCode.OK;
@@ -75,7 +56,7 @@ namespace Usuarios.Aplicacion.Usuario.Comandos
                     {
                         output.Mensaje = "Usuario y/o clave incorrecta";
                         output.Resultado = Resultado.Error;
-                        output.Status = HttpStatusCode.InternalServerError;
+                        output.Status = HttpStatusCode.Unauthorized;
                     }
                 }
                     
@@ -90,12 +71,12 @@ namespace Usuarios.Aplicacion.Usuario.Comandos
             return output;
         }
 
-        private string GenerarTokenJwt(Guid idUsuario, int tiempo)
+        private string GenerarTokenJwt(string codigoUsuario, int tiempo)
         {
             DateTime dtNow = DateTime.UtcNow;
             SymmetricSecurityKey securityKey = new (System.Text.Encoding.Default.GetBytes(_llave.PadRight((512 / 8), '\0')));
             SigningCredentials signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256Signature);
-            ClaimsIdentity claimsIdentity = new ClaimsIdentity([new Claim(ClaimTypes.Name, idUsuario.ToString())]);
+            ClaimsIdentity claimsIdentity = new ClaimsIdentity([new Claim(ClaimTypes.Name, codigoUsuario.ToString())]);
             var tokenHandler = new JwtSecurityTokenHandler();
             JwtSecurityToken jwtSecurityToken = tokenHandler.CreateJwtSecurityToken(audience: _receptor, issuer: _emisor, subject: claimsIdentity, notBefore: dtNow, expires: dtNow.AddMinutes(tiempo), signingCredentials: signingCredentials);
 
